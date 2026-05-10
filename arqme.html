@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ArqMe — Gestión de proyectos de arquitectura</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #f5f5f7; color: #1d1d1f; font-family: 'Nunito', sans-serif; min-height: 100vh; }
+
+    /* ── NAV ── */
+    .topnav { background: #fff; border-bottom: 0.5px solid #d2d2d7; display: flex; align-items: center; padding: 0 2rem; height: 54px; position: sticky; top: 0; z-index: 100; }
+    .brand { display: flex; align-items: center; gap: 9px; margin-right: 2rem; text-decoration: none; }
+    .brand-logo { width: 30px; height: 30px; background: #1d1d1f; display: flex; align-items: center; justify-content: center; }
+    .brand-name { font-size: 16px; font-weight: 700; color: #1d1d1f; letter-spacing: -.3px; }
+    .brand-name span { font-weight: 300; color: #6e6e73; }
+    .nav-links { display: flex; align-items: center; flex: 1; }
+    .nl { font-size: 13px; color: #6e6e73; padding: 0 13px; height: 54px; display: flex; align-items: center; cursor: pointer; border-bottom: 2px solid transparent; font-weight: 500; white-space: nowrap; transition: color .15s; }
+    .nl:hover { color: #1d1d1f; }
+    .nl.on { color: #1d1d1f; border-bottom-color: #1d1d1f; font-weight: 700; }
+    .nl .ndot { background: #ff3b30; color: #fff; font-size: 9px; font-weight: 700; border-radius: 20px; padding: 1px 5px; margin-left: 5px; }
+    .nav-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+    .vt { display: flex; border: 0.5px solid #d2d2d7; overflow: hidden; }
+    .vb { font-size: 11px; font-weight: 600; padding: 5px 12px; background: #fff; color: #6e6e73; border: none; cursor: pointer; font-family: 'Nunito', sans-serif; transition: all .15s; }
+    .vb.on { background: #1d1d1f; color: #fff; }
+    .nav-av { width: 28px; height: 28px; border-radius: 50%; background: #1d1d1f; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; }
+
+    /* ── LAYOUT ── */
+    .main { padding: 2rem; max-width: 960px; margin: 0 auto; }
+    .section { display: none; }
+    .section.on { display: block; }
+
+    /* ── SHARED ── */
+    .sec-h { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 1rem; }
+    .sec-t { font-size: 11px; font-weight: 700; color: #6e6e73; letter-spacing: .08em; text-transform: uppercase; }
+    .sec-a { font-size: 12px; color: #0071e3; cursor: pointer; font-weight: 600; }
+    .tag { font-size: 10px; font-weight: 700; padding: 2px 8px; letter-spacing: .03em; }
+    .t-act { background: #e8f4fd; color: #0071e3; }
+    .t-ini { background: #fff8e6; color: #ac7a00; }
+    .t-done { background: #edfaf3; color: #1a7a4a; }
+    .t-pau { background: #f5f5f7; color: #6e6e73; }
+    .t-urg { background: #fff0ef; color: #ff3b30; }
+    .t-med { background: #fff8ee; color: #ff9500; }
+    .t-rev { background: #fff8ee; color: #ac7a00; }
+    .pb-outer { height: 3px; background: #e8e8ed; flex: 1; }
+    .pb-fill { height: 100%; }
+    .btn-main { font-size: 12px; font-weight: 700; padding: 7px 16px; background: #1d1d1f; color: #fff; border: none; cursor: pointer; font-family: 'Nunito', sans-serif; }
+    .btn-main:hover { background: #3a3a3c; }
+    .btn-sec { font-size: 12px; font-weight: 600; padding: 7px 14px; background: #fff; color: #1d1d1f; border: 0.5px solid #d2d2d7; cursor: pointer; font-family: 'Nunito', sans-serif; }
+    .btn-ghost { font-size: 12px; font-weight: 600; padding: 7px 14px; background: transparent; color: #6e6e73; border: none; cursor: pointer; font-family: 'Nunito', sans-serif; }
+    .card { background: #fff; border: 0.5px solid #d2d2d7; padding: 1.25rem; }
+    .ct { font-size: 13px; font-weight: 700; color: #1d1d1f; margin-bottom: .9rem; }
+
+    /* ── MODAL ── */
+    .overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.4); z-index: 200; align-items: center; justify-content: center; }
+    .overlay.open { display: flex; }
+    .modal { background: #fff; width: 500px; max-width: 95vw; max-height: 88vh; overflow-y: auto; border: 0.5px solid #d2d2d7; }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 0.5px solid #e8e8ed; }
+    .modal-title { font-size: 16px; font-weight: 700; color: #1d1d1f; }
+    .modal-close { background: none; border: none; font-size: 22px; color: #6e6e73; cursor: pointer; line-height: 1; font-family: 'Nunito', sans-serif; }
+    .modal-body { padding: 1.5rem; }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-label { font-size: 12px; font-weight: 700; color: #1d1d1f; display: block; margin-bottom: .4rem; }
+    .form-input { width: 100%; padding: 9px 12px; border: 0.5px solid #d2d2d7; background: #fff; font-size: 13px; font-family: 'Nunito', sans-serif; color: #1d1d1f; outline: none; }
+    .form-input:focus { border-color: #1d1d1f; }
+    .form-select { width: 100%; padding: 9px 12px; border: 0.5px solid #d2d2d7; background: #fff; font-size: 13px; font-family: 'Nunito', sans-serif; color: #1d1d1f; outline: none; cursor: pointer; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-hint { font-size: 11px; color: #6e6e73; margin-top: 4px; }
+    .form-textarea { width: 100%; padding: 9px 12px; border: 0.5px solid #d2d2d7; background: #fff; font-size: 13px; font-family: 'Nunito', sans-serif; color: #1d1d1f; outline: none; resize: vertical; min-height: 80px; }
+    .form-textarea:focus { border-color: #1d1d1f; }
+    .modal-foot { padding: 1rem 1.5rem; border-top: 0.5px solid #e8e8ed; display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+
+    /* ── DASHBOARD ── */
+    .hero-eye { font-size: 11px; font-weight: 700; color: #6e6e73; letter-spacing: .08em; text-transform: uppercase; margin-bottom: .4rem; }
+    .hero-title { font-size: 36px; font-weight: 300; color: #1d1d1f; letter-spacing: -.5px; line-height: 1.1; margin-bottom: .3rem; }
+    .hero-title b { font-weight: 700; }
+    .hero-sub { font-size: 13px; color: #6e6e73; margin-bottom: 2rem; }
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); border: 0.5px solid #d2d2d7; background: #fff; margin-bottom: 1.5rem; }
+    .mc { padding: 1.1rem 1.25rem; border-right: 0.5px solid #d2d2d7; }
+    .mc:last-child { border-right: none; }
+    .mc-l { font-size: 11px; font-weight: 600; color: #6e6e73; margin-bottom: .35rem; }
+    .mc-v { font-size: 26px; font-weight: 300; color: #1d1d1f; letter-spacing: -.4px; }
+    .mc-s { font-size: 11px; color: #6e6e73; margin-top: .25rem; }
+    .g2 { display: grid; grid-template-columns: 3fr 2fr; gap: 1rem; margin-bottom: 1.5rem; }
+    .er { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+    .en { font-size: 12px; color: #1d1d1f; width: 130px; min-width: 130px; font-weight: 500; }
+    .pp { font-size: 11px; color: #6e6e73; min-width: 28px; text-align: right; font-weight: 600; }
+    .eb { min-width: 68px; text-align: right; }
+
+    /* ── PENDIENTES BLOCK ── */
+    .pblock { border: 0.5px solid #d2d2d7; background: #fff; margin-bottom: 1.5rem; }
+    .pbh { display: flex; align-items: center; justify-content: space-between; padding: .85rem 1.25rem; border-bottom: 0.5px solid #e8e8ed; }
+    .pbh-l { display: flex; align-items: center; gap: 10px; }
+    .pbh-title { font-size: 14px; font-weight: 700; color: #1d1d1f; }
+    .ub { background: #ff3b30; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 9px; }
+    .tbtn { font-size: 12px; font-weight: 600; color: #6e6e73; background: none; border: none; cursor: pointer; font-family: 'Nunito', sans-serif; display: flex; align-items: center; gap: 4px; }
+    .pi { display: flex; align-items: center; gap: 12px; padding: .85rem 1.25rem; border-bottom: 0.5px solid #e8e8ed; }
+    .pi:last-child { border-bottom: none; }
+    .pi-ic { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+    .ic-m { color: #ff9500; }
+    .ic-d { color: #5856d6; }
+    .ic-doc { color: #ff3b30; }
+    .ic-r { color: #34c759; }
+    .pi-b { flex: 1; }
+    .pi-t { font-size: 13px; font-weight: 600; color: #1d1d1f; }
+    .pi-o { font-size: 11px; color: #6e6e73; margin-top: 2px; }
+    .pi-r { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; min-width: 78px; }
+    .vcu { font-size: 11px; font-weight: 700; color: #ff3b30; }
+    .rest { background: #fafafa; border-top: 0.5px solid #e8e8ed; padding: .75rem 1.25rem; }
+    .rest-t { font-size: 10px; font-weight: 700; color: #6e6e73; letter-spacing: .07em; text-transform: uppercase; margin-bottom: .5rem; }
+    .psm { display: flex; align-items: center; gap: 10px; padding: 5px 0; border-bottom: 0.5px solid #e8e8ed; }
+    .psm:last-child { border-bottom: none; }
+    .psm-t { font-size: 12px; color: #1d1d1f; flex: 1; font-weight: 500; }
+    .psm-d { font-size: 11px; color: #6e6e73; font-weight: 600; }
+    .fin-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 0.5px solid #e8e8ed; }
+    .fin-item:last-child { border-bottom: none; }
+    .fi-label { font-size: 12px; font-weight: 600; color: #1d1d1f; }
+    .fi-sub { font-size: 11px; color: #6e6e73; }
+
+    /* ── PROYECTO ── */
+    .etabs { display: flex; border: 0.5px solid #d2d2d7; margin-bottom: 1.5rem; background: #fff; }
+    .etab { font-size: 13px; font-weight: 600; padding: 10px 20px; border: none; background: transparent; color: #6e6e73; cursor: pointer; font-family: 'Nunito', sans-serif; border-bottom: 2px solid transparent; }
+    .etab.on { color: #1d1d1f; border-bottom-color: #1d1d1f; background: #f5f5f7; }
+    .etab-content { display: none; }
+    .etab-content.on { display: block; }
+    .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0; border: 0.5px solid #d2d2d7; background: #d2d2d7; margin-bottom: 1.25rem; }
+    .doc-card { background: #fff; padding: 1rem; cursor: pointer; }
+    .doc-card:hover { background: #fafafa; }
+    .dc-ic { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: .75rem; }
+    .dc-name { font-size: 12px; font-weight: 700; color: #1d1d1f; margin-bottom: 2px; line-height: 1.3; }
+    .dc-meta { font-size: 11px; color: #6e6e73; }
+    .mat-table { border: 0.5px solid #d2d2d7; background: #fff; margin-bottom: 1.25rem; }
+    .mat-row { display: flex; align-items: center; gap: 12px; padding: 10px 1.25rem; border-bottom: 0.5px solid #e8e8ed; }
+    .mat-row:last-child { border-bottom: none; }
+    .mat-sw { width: 28px; height: 28px; border: 0.5px solid #e8e8ed; flex-shrink: 0; }
+    .mat-name { font-size: 13px; font-weight: 600; color: #1d1d1f; flex: 1; }
+    .mat-det { font-size: 11px; color: #6e6e73; }
+    .img-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 0.5px solid #d2d2d7; background: #d2d2d7; margin-bottom: 1.25rem; }
+    .img-thumb { background: #e8e8ed; height: 110px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #c7c7cc; cursor: pointer; position: relative; overflow: hidden; }
+    .img-label { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,.45); color: #fff; font-size: 10px; font-weight: 600; padding: 4px 8px; }
+
+    /* ── CRONOGRAMA ── */
+    .gantt-wrap { background: #fff; border: 0.5px solid #d2d2d7; margin-bottom: 1.5rem; overflow-x: auto; }
+    .gantt-head { display: flex; border-bottom: 0.5px solid #e8e8ed; background: #f5f5f7; }
+    .gh-label { width: 180px; min-width: 180px; padding: 8px 1rem; font-size: 10px; font-weight: 700; color: #6e6e73; letter-spacing: .06em; text-transform: uppercase; border-right: 0.5px solid #e8e8ed; }
+    .gh-months { flex: 1; display: flex; }
+    .gh-m { flex: 1; text-align: center; font-size: 10px; font-weight: 600; color: #6e6e73; padding: 8px 4px; border-right: 0.5px solid #e8e8ed; }
+    .gh-m:last-child { border-right: none; }
+    .gh-m.now { color: #1d1d1f; font-weight: 700; background: #f0f0f5; }
+    .g-row { display: flex; align-items: center; border-bottom: 0.5px solid #e8e8ed; min-height: 40px; }
+    .g-row:last-child { border-bottom: none; }
+    .g-row.grp { background: #fafafa; }
+    .gr-label { width: 180px; min-width: 180px; padding: 7px 1rem; font-size: 12px; color: #1d1d1f; border-right: 0.5px solid #e8e8ed; font-weight: 500; }
+    .gr-label.grp { font-size: 11px; font-weight: 700; color: #6e6e73; text-transform: uppercase; letter-spacing: .05em; }
+    .gr-label.sub { padding-left: 1.5rem; font-size: 11px; color: #6e6e73; }
+    .gr-bars { flex: 1; position: relative; height: 40px; display: flex; align-items: center; }
+    .gr-grid { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; pointer-events: none; }
+    .gr-gc { flex: 1; border-right: 0.5px solid #f0f0f5; }
+    .gr-gc.now { background: #f0f0f5; }
+    .gbar { position: absolute; height: 16px; display: flex; align-items: center; padding: 0 6px; font-size: 10px; font-weight: 700; white-space: nowrap; overflow: hidden; }
+    .bar-done { background: #1d1d1f; color: #fff; }
+    .bar-act { background: #5856d6; color: #fff; }
+    .bar-fut { background: #e8e8ed; color: #6e6e73; }
+    .bar-dec { background: #ff9500; color: #fff; }
+    .today-l { position: absolute; top: 0; bottom: 0; width: 1.5px; background: #ff3b30; z-index: 5; }
+    .gantt-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: .75rem; }
+    .leg-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #6e6e73; font-weight: 600; }
+
+    /* ── CASHFLOW ── */
+    .cf-metrics { display: grid; grid-template-columns: repeat(4, 1fr); border: 0.5px solid #d2d2d7; background: #fff; margin-bottom: 1.5rem; }
+    .chart-area { background: #fff; border: 0.5px solid #d2d2d7; padding: 1.25rem; margin-bottom: 1.5rem; }
+    .chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 160px; padding-bottom: 24px; position: relative; border-bottom: 0.5px solid #e8e8ed; }
+    .chart-y { position: absolute; left: 0; top: 0; bottom: 24px; display: flex; flex-direction: column; justify-content: space-between; }
+    .cy-l { font-size: 10px; color: #6e6e73; font-weight: 600; }
+    .bars-inner { flex: 1; display: flex; align-items: flex-end; gap: 6px; height: 100%; margin-left: 40px; }
+    .bar-g { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+    .bar-col { width: 100%; }
+    .bar-col.exec { background: #1d1d1f; }
+    .bar-col.proj { background: #e8e8ed; }
+    .bar-col.cur { background: #5856d6; }
+    .bar-lbl { font-size: 10px; color: #6e6e73; margin-top: 6px; font-weight: 600; }
+    .tabla { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .tabla th { text-align: left; font-weight: 700; font-size: 10px; color: #6e6e73; letter-spacing: .06em; text-transform: uppercase; padding: 7px 1rem; border-bottom: 0.5px solid #e8e8ed; background: #f5f5f7; }
+    .tabla td { padding: 10px 1rem; border-bottom: 0.5px solid #e8e8ed; color: #1d1d1f; vertical-align: middle; }
+    .tabla tr:last-child td { border-bottom: none; }
+    .tabla tr.hl td { background: #fff8f8; }
+    .mp { color: #34c759; font-weight: 700; }
+    .mn { color: #ff3b30; font-weight: 700; }
+    .mf { color: #6e6e73; font-weight: 600; }
+    .new-row { animation: fadeIn .3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── CONTRATACIONES ── */
+    .cont-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0; border: 0.5px solid #d2d2d7; background: #d2d2d7; margin-bottom: 1.5rem; }
+    .ccard { background: #fff; padding: 1.25rem; }
+    .ccard:hover { background: #fafafa; }
+    .cc-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: .75rem; }
+    .cc-av { width: 34px; height: 34px; border-radius: 50%; background: #f0f0f5; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #1d1d1f; }
+    .cc-name { font-size: 13px; font-weight: 700; color: #1d1d1f; margin-bottom: 2px; }
+    .cc-role { font-size: 11px; color: #6e6e73; margin-bottom: .6rem; }
+    .cc-det { font-size: 11px; color: #6e6e73; display: flex; align-items: center; gap: 5px; margin-bottom: 3px; }
+    .cc-foot { display: flex; align-items: center; justify-content: space-between; padding-top: .75rem; margin-top: .75rem; border-top: 0.5px solid #e8e8ed; }
+    .cc-amount { font-size: 13px; font-weight: 700; color: #1d1d1f; }
+    .add-c { background: #fafafa; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 160px; cursor: pointer; border: 1px dashed #d2d2d7; }
+    .add-c:hover { background: #f0f0f2; }
+
+    /* ── PENDIENTES SECTION ── */
+    .pend-list { border: 0.5px solid #d2d2d7; background: #fff; }
+    .pend-row { display: flex; align-items: center; gap: 12px; padding: .85rem 1.25rem; border-bottom: 0.5px solid #e8e8ed; }
+    .pend-row:last-child { border-bottom: none; }
+    .pend-row:hover { background: #fafafa; }
+    .check-box { width: 18px; height: 18px; border: 0.5px solid #d2d2d7; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; transition: all .15s; }
+    .check-box.done { background: #1d1d1f; border-color: #1d1d1f; color: #fff; font-size: 11px; }
+    .pend-t { font-size: 13px; font-weight: 600; color: #1d1d1f; flex: 1; }
+    .pend-t.done { text-decoration: line-through; color: #6e6e73; font-weight: 400; }
+    .pend-origen { font-size: 11px; color: #6e6e73; }
+
+    /* ── GESTIONES ── */
+    .gest-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .tram-item { display: flex; align-items: flex-start; gap: 12px; padding: 1rem 1.25rem; border-bottom: 0.5px solid #e8e8ed; }
+    .tram-item:last-child { border-bottom: none; }
+    .tram-ic { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+    .tram-body { flex: 1; }
+    .tram-name { font-size: 13px; font-weight: 700; color: #1d1d1f; margin-bottom: 2px; }
+    .tram-det { font-size: 11px; color: #6e6e73; line-height: 1.5; margin-bottom: 6px; }
+    .serv-row { display: flex; align-items: center; gap: 12px; padding: .85rem 1.25rem; border-bottom: 0.5px solid #e8e8ed; }
+    .serv-row:last-child { border-bottom: none; }
+    .serv-body { flex: 1; }
+    .serv-name { font-size: 13px; font-weight: 600; color: #1d1d1f; }
+    .serv-det { font-size: 11px; color: #6e6e73; margin-top: 1px; }
+
+    /* ── VISTA CLIENTE ── */
+    .cli-bar { background: #fff8e6; border-bottom: 0.5px solid #f0d080; padding: 8px 2rem; font-size: 12px; color: #7a5800; display: flex; align-items: center; justify-content: space-between; }
+    .tl { padding-left: 20px; position: relative; }
+    .tl::before { content: ''; position: absolute; left: 7px; top: 6px; bottom: 6px; width: 1px; background: #e8e8ed; }
+    .tli { position: relative; padding-bottom: 14px; }
+    .tli:last-child { padding-bottom: 0; }
+    .tl-dot { position: absolute; left: -17px; top: 4px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #fff; }
+    .tl-n { font-size: 13px; font-weight: 600; color: #1d1d1f; }
+    .tl-s { font-size: 11px; color: #6e6e73; margin-top: 2px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 700px) {
+      .metrics { grid-template-columns: 1fr 1fr; }
+      .g2 { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .gest-cols { grid-template-columns: 1fr; }
+      .topnav { padding: 0 1rem; }
+      .main { padding: 1rem; }
+      .nl { padding: 0 8px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════ MODALES ═══════════════ -->
+
+<div class="overlay" id="modal-pago">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Registrar pago</div>
+      <button class="modal-close" onclick="closeModal('modal-pago')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Concepto *</label>
+        <input class="form-input" id="pago-concepto" type="text" placeholder="Ej: Cuota estructura junio">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Monto ($) *</label>
+          <input class="form-input" id="pago-monto" type="number" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha</label>
+          <input class="form-input" id="pago-fecha" type="date">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Rubro</label>
+          <select class="form-select" id="pago-rubro">
+            <option>Estructura</option>
+            <option>Instalaciones</option>
+            <option>Honorarios</option>
+            <option>Mano de obra</option>
+            <option>Materiales</option>
+            <option>Gestiones</option>
+            <option>Otros</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select class="form-select" id="pago-estado">
+            <option value="pagado">Pagado</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="proyectado">Proyectado</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nota (opcional)</label>
+        <input class="form-input" id="pago-nota" type="text" placeholder="Ej: Incluye anticipo de materiales">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeModal('modal-pago')">Cancelar</button>
+      <button class="btn-main" onclick="agregarPago()">Guardar pago</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-contrato">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Agregar contratación</div>
+      <button class="modal-close" onclick="closeModal('modal-contrato')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nombre / Empresa *</label>
+          <input class="form-input" id="cont-nombre" type="text" placeholder="Ej: Plomería García">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Categoría</label>
+          <select class="form-select" id="cont-cat">
+            <option>Mano de obra</option>
+            <option>Asesoría</option>
+            <option>Proveedor</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rol / Especialidad</label>
+        <input class="form-input" id="cont-rol" type="text" placeholder="Ej: Instalaciones sanitarias">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="cont-email" type="email" placeholder="nombre@empresa.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Teléfono</label>
+          <input class="form-input" id="cont-tel" type="text" placeholder="+54 11 ...">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Monto de contrato ($)</label>
+          <input class="form-input" id="cont-monto" type="number" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select class="form-select" id="cont-estado">
+            <option value="activo">Activo</option>
+            <option value="porfirmar">Por firmar</option>
+            <option value="finalizado">Finalizado</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeModal('modal-contrato')">Cancelar</button>
+      <button class="btn-main" onclick="agregarContrato()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-pendiente">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Agregar pendiente</div>
+      <button class="modal-close" onclick="closeModal('modal-pendiente')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Descripción *</label>
+        <input class="form-input" id="pend-desc" type="text" placeholder="Ej: Definir color de pintura exterior">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Tipo</label>
+          <select class="form-select" id="pend-tipo">
+            <option value="definicion">Definición proyectual</option>
+            <option value="pago">Pago</option>
+            <option value="documento">Documento / aprobación</option>
+            <option value="reunion">Reunión</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Urgencia</label>
+          <select class="form-select" id="pend-urg">
+            <option value="urgente">Urgente</option>
+            <option value="normal">Normal</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Vence</label>
+          <input class="form-input" id="pend-fecha" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Origen</label>
+          <select class="form-select" id="pend-origen">
+            <option>Proyecto</option>
+            <option>Cashflow</option>
+            <option>Contrataciones</option>
+            <option>Gestiones</option>
+            <option>General</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nota para el cliente</label>
+        <input class="form-input" id="pend-nota" type="text" placeholder="¿Por qué es importante esta definición?">
+        <div class="form-hint">Esta nota la ve el cliente en su vista</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeModal('modal-pendiente')">Cancelar</button>
+      <button class="btn-main" onclick="agregarPendiente()">Guardar pendiente</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-gestion">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Nueva gestión</div>
+      <button class="modal-close" onclick="closeModal('modal-gestion')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre del trámite *</label>
+        <input class="form-input" id="gest-nombre" type="text" placeholder="Ej: Plano de ampliación">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Tipo</label>
+          <select class="form-select" id="gest-tipo">
+            <option>Municipal</option>
+            <option>Servicio de obra</option>
+            <option>Habilitación</option>
+            <option>Otro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select class="form-select" id="gest-estado">
+            <option value="tramite">En trámite</option>
+            <option value="aprobado">Aprobado</option>
+            <option value="pendiente">Pendiente</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Detalle</label>
+        <textarea class="form-textarea" id="gest-det" placeholder="Organismo, número de expediente, observaciones..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fecha estimada de resolución</label>
+        <input class="form-input" id="gest-fecha" type="date">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeModal('modal-gestion')">Cancelar</button>
+      <button class="btn-main" onclick="agregarGestion()">Guardar gestión</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ APP ═══════════════ -->
+
+<nav class="topnav">
+  <a class="brand" href="#">
+    <div class="brand-logo">
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+        <path d="M2 16L10 4L18 16" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M5.5 11H14.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M10 16V13" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="brand-name">Arq<span>Me</span></div>
+  </a>
+  <div class="nav-links">
+    <div class="nl on" onclick="nav('dashboard',this)">Dashboard</div>
+    <div class="nl" onclick="nav('proyecto',this)">Proyecto</div>
+    <div class="nl" onclick="nav('cronograma',this)">Cronograma</div>
+    <div class="nl" onclick="nav('cashflow',this)">Cashflow</div>
+    <div class="nl" onclick="nav('contrataciones',this)">Contrataciones</div>
+    <div class="nl" onclick="nav('gestiones',this)">Gestiones <span class="ndot">1</span></div>
+    <div class="nl" onclick="nav('pendientes',this)">Pendientes</div>
+  </div>
+  <div class="nav-right">
+    <div class="vt">
+      <button class="vb on" onclick="setVista('arq',this)">Arquitecto</button>
+      <button class="vb" onclick="setVista('cli',this)">Cliente</button>
+    </div>
+    <div class="nav-av">MG</div>
+  </div>
+</nav>
+
+<!-- Banner vista cliente -->
+<div class="cli-bar" id="cli-bar" style="display:none;">
+  <span><i class="ti ti-eye"></i> Estás viendo la vista del cliente — esto es lo que ve Rodríguez cuando entra</span>
+  <button class="btn-sec" style="font-size:11px;padding:4px 10px;" onclick="setVista('arq', document.querySelectorAll('.vb')[0])">Volver a arquitecto</button>
+</div>
+
+<div class="main">
+
+  <!-- ── DASHBOARD ── -->
+  <div id="dashboard" class="section on">
+    <div id="arq-hero">
+      <div class="hero-eye">Casa Rodríguez · Palermo · En obra</div>
+      <div class="hero-title">Buenos días, <b>Martín.</b></div>
+      <div class="hero-sub">Tu proyecto avanza al 62% · Actualizado hoy</div>
+    </div>
+    <div id="cli-hero" style="display:none;">
+      <div class="hero-eye">Casa Palermo · En obra</div>
+      <div class="hero-title">Hola, <b>Juan.</b></div>
+      <div class="hero-sub">Tu proyecto avanza al 62% · Arquitecto: Martín García</div>
+    </div>
+
+    <div class="metrics">
+      <div class="mc"><div class="mc-l">Avance general</div><div class="mc-v">62%</div><div class="mc-s">Etapa: Estructura</div></div>
+      <div class="mc"><div class="mc-l">Pendientes urgentes</div><div class="mc-v" style="color:#ff3b30" id="dash-count">3</div><div class="mc-s">del proyecto</div></div>
+      <div class="mc"><div class="mc-l">Ejecutado</div><div class="mc-v">$48.2M</div><div class="mc-s">De $78M total</div></div>
+      <div class="mc"><div class="mc-l">Entrega estimada</div><div class="mc-v">Oct 25</div><div class="mc-s">84 días restantes</div></div>
+    </div>
+
+    <div class="pblock">
+      <div class="pbh">
+        <div class="pbh-l">
+          <div class="pbh-title" id="pblock-title">Pendientes del proyecto</div>
+          <div class="ub" id="dash-ub">3 urgentes</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button class="tbtn" onclick="toggleR('dash-rest',this)"><i class="ti ti-chevron-down"></i> Ver todos (5)</button>
+          <button class="btn-main" style="font-size:11px;padding:5px 12px;" id="add-pend-btn" onclick="openModal('modal-pendiente')">+ Agregar</button>
+        </div>
+      </div>
+      <div id="dash-pend-list">
+        <div class="pi"><div class="pi-ic ic-m"><i class="ti ti-cash"></i></div><div class="pi-b"><div class="pi-t">Pago anticipo instalaciones — $980.000</div><div class="pi-o" id="o1">Cashflow → Anticipo ElectroObra · Sin pago no arranca instalación eléctrica</div></div><div class="pi-r"><span class="vcu">15 may</span><span class="tag t-urg">Urgente</span></div></div>
+        <div class="pi"><div class="pi-ic ic-d"><i class="ti ti-palette"></i></div><div class="pi-b"><div class="pi-t">Definir revestimiento de fachada</div><div class="pi-o" id="o2">Proyecto → Anteproyecto → Materiales · Traba la contratación de fachada</div></div><div class="pi-r"><span class="vcu">16 may</span><span class="tag t-urg">Urgente</span></div></div>
+        <div class="pi"><div class="pi-ic ic-doc"><i class="ti ti-file-text"></i></div><div class="pi-b"><div class="pi-t">Aprobar plano sanitario revisado</div><div class="pi-o" id="o3">Proyecto → Doc. ejecutiva · Tu aprobación habilita continuar con instalaciones</div></div><div class="pi-r"><span class="vcu">23 may</span><span class="tag t-urg">Urgente</span></div></div>
+      </div>
+      <div id="dash-rest" style="display:none;">
+        <div class="rest">
+          <div class="rest-t">Próximos</div>
+          <div class="psm"><div class="pi-ic ic-d" style="width:22px;height:22px;font-size:13px;"><i class="ti ti-users"></i></div><div class="psm-t">Confirmar proveedor de carpintería</div><span class="tag t-med" style="margin-right:8px;">Definición</span><div class="psm-d">20 may</div></div>
+          <div class="psm"><div class="pi-ic ic-m" style="width:22px;height:22px;font-size:13px;"><i class="ti ti-cash"></i></div><div class="psm-t">Honorarios arquitecto mayo — $2.100.000</div><span class="tag t-med" style="margin-right:8px;">Pago</span><div class="psm-d">31 may</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="g2">
+      <div class="card">
+        <div class="ct">Avance por etapa</div>
+        <div class="er"><div class="en">Proyecto y planos</div><div class="pb-outer"><div class="pb-fill" style="width:100%;background:#34c759;height:3px;"></div></div><div class="pp">100%</div><div class="eb"><span class="tag t-done">Completo</span></div></div>
+        <div class="er"><div class="en">Municipal</div><div class="pb-outer"><div class="pb-fill" style="width:85%;background:#5856d6;height:3px;"></div></div><div class="pp">85%</div><div class="eb"><span class="tag t-act">En curso</span></div></div>
+        <div class="er"><div class="en">Demolición</div><div class="pb-outer"><div class="pb-fill" style="width:100%;background:#34c759;height:3px;"></div></div><div class="pp">100%</div><div class="eb"><span class="tag t-done">Completo</span></div></div>
+        <div class="er"><div class="en">Estructura</div><div class="pb-outer"><div class="pb-fill" style="width:60%;background:#5856d6;height:3px;"></div></div><div class="pp">60%</div><div class="eb"><span class="tag t-act">En curso</span></div></div>
+        <div class="er"><div class="en">Instalaciones</div><div class="pb-outer"><div class="pb-fill" style="width:20%;background:#ff9500;height:3px;"></div></div><div class="pp">20%</div><div class="eb"><span class="tag t-ini">Iniciando</span></div></div>
+        <div class="er"><div class="en">Terminaciones</div><div class="pb-outer"><div class="pb-fill" style="width:0%;background:#e8e8ed;height:3px;"></div></div><div class="pp">0%</div><div class="eb"><span class="tag t-pau">Pendiente</span></div></div>
+      </div>
+      <div class="card">
+        <div class="ct">Próximos vencimientos</div>
+        <div id="dash-fin-list">
+          <div class="fin-item"><div><div class="fi-label">Anticipo ElectroObra</div><div class="fi-sub">Cashflow · 15 may</div></div><div style="font-size:13px;font-weight:700;color:#ff3b30;">$980k</div></div>
+          <div class="fin-item"><div><div class="fi-label">Honorarios arquitecto</div><div class="fi-sub">Cashflow · 31 may</div></div><div style="font-size:13px;font-weight:700;color:#ff9500;">$2.1M</div></div>
+          <div class="fin-item"><div><div class="fi-label">Cuota estructura jun</div><div class="fi-sub">Cashflow · jun</div></div><div style="font-size:13px;font-weight:700;color:#6e6e73;">$3.2M</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline cliente -->
+    <div id="cli-timeline" style="display:none;">
+      <div class="sec-h"><div class="sec-t">¿En qué etapa estamos?</div></div>
+      <div class="card">
+        <div class="tl">
+          <div class="tli"><div class="tl-dot" style="background:#34c759;"></div><div class="tl-n">Proyecto y planos</div><div class="tl-s">Completado — feb 2025</div></div>
+          <div class="tli"><div class="tl-dot" style="background:#34c759;"></div><div class="tl-n">Demolición</div><div class="tl-s">Completado — abr 2025</div></div>
+          <div class="tli"><div class="tl-dot" style="background:#1d1d1f;"></div><div class="tl-n" style="font-size:14px;font-weight:700;">Estructura — estamos acá</div><div class="tl-s">En curso · 60% completado · hasta jul 2025</div></div>
+          <div class="tli"><div class="tl-dot" style="background:#d2d2d7;"></div><div class="tl-n" style="color:#6e6e73;">Instalaciones</div><div class="tl-s">Próximamente — jun 2025</div></div>
+          <div class="tli"><div class="tl-dot" style="background:#d2d2d7;"></div><div class="tl-n" style="color:#6e6e73;">Terminaciones y entrega</div><div class="tl-s">Estimado oct 2025</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PROYECTO ── -->
+  <div id="proyecto" class="section">
+    <div class="sec-h"><div class="sec-t">Proyecto — Casa Rodríguez</div><button class="btn-main"><i class="ti ti-upload"></i> Subir archivo</button></div>
+    <div class="etabs">
+      <button class="etab on" onclick="showEtapa('ante',this)">Anteproyecto</button>
+      <button class="etab" onclick="showEtapa('ejec',this)">Doc. ejecutiva</button>
+      <button class="etab" onclick="showEtapa('obra',this)">Obra</button>
+    </div>
+    <div id="ante" class="etab-content on">
+      <div class="sec-h"><div class="sec-t">Planos y renders</div></div>
+      <div class="doc-grid">
+        <div class="doc-card"><div class="dc-ic" style="color:#34c759;"><i class="ti ti-vector"></i></div><div class="dc-name">Planta baja borrador</div><div class="dc-meta">DWG · 12 feb</div><div style="margin-top:6px;"><span class="tag t-done">Aprobado</span></div></div>
+        <div class="doc-card"><div class="dc-ic" style="color:#34c759;"><i class="ti ti-vector"></i></div><div class="dc-name">Planta alta borrador</div><div class="dc-meta">DWG · 12 feb</div><div style="margin-top:6px;"><span class="tag t-done">Aprobado</span></div></div>
+        <div class="doc-card"><div class="dc-ic" style="color:#5856d6;"><i class="ti ti-photo"></i></div><div class="dc-name">Render fachada</div><div class="dc-meta">JPG · 15 feb</div><div style="margin-top:6px;"><span class="tag t-done">Aprobado</span></div></div>
+        <div class="doc-card"><div class="dc-ic" style="color:#5856d6;"><i class="ti ti-photo"></i></div><div class="dc-name">Render living</div><div class="dc-meta">JPG · 15 feb</div><div style="margin-top:6px;"><span class="tag t-done">Aprobado</span></div></div>
+      </div>
+      <div class="sec-h"><div class="sec-t">Materiales</div></div>
+      <div class="mat-table">
+        <div class="mat-row"><div class="mat-sw" style="background:#e8e0d4;"></div><div style="flex:1;"><div class="mat-name">Revestimiento fachada</div><div class="mat-det">Ladrillo visto · Cerámicas del Norte</div></div><span class="tag t-ini">Por definir</span></div>
+        <div class="mat-row"><div class="mat-sw" style="background:#c8c8c8;"></div><div style="flex:1;"><div class="mat-name">Piso interior PB</div><div class="mat-det">Microcemento gris · Estilo Pisos</div></div><span class="tag t-done">Confirmado</span></div>
+        <div class="mat-row"><div class="mat-sw" style="background:#1d1d1f;"></div><div style="flex:1;"><div class="mat-name">Carpintería exterior</div><div class="mat-det">Aluminio línea Módena · Negro</div></div><span class="tag t-done">Confirmado</span></div>
+        <div class="mat-row"><div class="mat-sw" style="background:#f0f0f0;"></div><div style="flex:1;"><div class="mat-name">Mesada cocina</div><div class="mat-det">Silestone blanco · proveedor por confirmar</div></div><span class="tag t-ini">Por definir</span></div>
+      </div>
+    </div>
+    <div id="ejec" class="etab-content">
+      <div class="sec-h"><div class="sec-t">Planos definitivos</div></div>
+      <div class="doc-grid">
+        <div class="doc-card"><div class="dc-ic" style="color:#34c759;"><i class="ti ti-vector"></i></div><div class="dc-name">Plano general PB Rev3</div><div class="dc-meta">DWG · 2 may</div><div style="margin-top:6px;"><span class="tag t-done">Aprobado</span></div></div>
+        <div class="doc-card"><div class="dc-ic" style="color:#34c759;"><i class="ti ti-vector"></i></div><div class="dc-name">Plano estructura hormigón</div><div class="dc-meta">DWG · 4 may</div><div style="margin-top:6px;"><span class="tag t-done">Aprobado</span></div></div>
+        <div class="doc-card"><div class="dc-ic" style="color:#ff9500;"><i class="ti ti-vector"></i></div><div class="dc-name">Plano sanitario Rev2</div><div class="dc-meta">DWG · 6 may</div><div style="margin-top:6px;"><span class="tag t-rev">Pendiente cliente</span></div></div>
+        <div class="doc-card"><div class="dc-ic" style="color:#6e6e73;"><i class="ti ti-vector"></i></div><div class="dc-name">Plano eléctrico</div><div class="dc-meta">DWG · en proceso</div><div style="margin-top:6px;"><span class="tag t-pau">En proceso</span></div></div>
+      </div>
+    </div>
+    <div id="obra" class="etab-content">
+      <div class="sec-h"><div class="sec-t">Fotos de avance</div></div>
+      <div class="img-grid">
+        <div class="img-thumb"><i class="ti ti-photo"></i><div class="img-label">Semana 8 · 6 may</div></div>
+        <div class="img-thumb"><i class="ti ti-photo"></i><div class="img-label">Semana 7 · 29 abr</div></div>
+        <div class="img-thumb"><i class="ti ti-photo"></i><div class="img-label">Semana 6 · 22 abr</div></div>
+        <div class="img-thumb"><i class="ti ti-photo"></i><div class="img-label">Semana 5 · 15 abr</div></div>
+        <div class="img-thumb"><i class="ti ti-photo"></i><div class="img-label">Semana 4 · 8 abr</div></div>
+        <div class="img-thumb" style="border:1px dashed #d2d2d7;background:#fafafa;"><i class="ti ti-plus"></i></div>
+      </div>
+      <div class="sec-h"><div class="sec-t">Documentación de obra</div></div>
+      <div class="doc-grid">
+        <div class="doc-card"><div class="dc-ic" style="color:#ff3b30;"><i class="ti ti-file-text"></i></div><div class="dc-name">Permiso municipal</div><div class="dc-meta">PDF · 1 abr</div><div style="margin-top:6px;"><span class="tag t-done">Vigente</span></div></div>
+        <div class="doc-card"><div class="dc-ic" style="color:#ff3b30;"><i class="ti ti-file-text"></i></div><div class="dc-name">Libro de obra — mayo</div><div class="dc-meta">PDF · 8 may</div><div style="margin-top:6px;"><span class="tag t-done">Al día</span></div></div>
+        <div class="doc-card"><div class="dc-ic" style="color:#34c759;"><i class="ti ti-table"></i></div><div class="dc-name">Remitos contratistas</div><div class="dc-meta">XLSX · 5 may</div><div style="margin-top:6px;"><span class="tag t-done">Actualizado</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CRONOGRAMA ── -->
+  <div id="cronograma" class="section">
+    <div class="sec-h"><div class="sec-t">Cronograma de obra · Mar–Oct 2025</div></div>
+    <div class="gantt-wrap">
+      <div class="gantt-head">
+        <div class="gh-label">Etapa / Tarea</div>
+        <div class="gh-months">
+          <div class="gh-m">Mar</div><div class="gh-m">Abr</div><div class="gh-m now">May</div><div class="gh-m">Jun</div><div class="gh-m">Jul</div><div class="gh-m">Ago</div><div class="gh-m">Sep</div><div class="gh-m">Oct</div>
+        </div>
+      </div>
+      <div class="g-row grp"><div class="gr-label grp">Demolición</div><div class="gr-bars"><div class="gr-grid"><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc now"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div></div><div class="gbar bar-done" style="left:0%;width:24%;">Completo</div><div class="today-l" style="left:27%;"></div></div></div>
+      <div class="g-row grp"><div class="gr-label grp">Estructura</div><div class="gr-bars"><div class="gr-grid"><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc now"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div></div><div class="gbar bar-act" style="left:12%;width:40%;">En curso 60%</div></div></div>
+      <div class="g-row"><div class="gr-label sub">Cimientos y bases</div><div class="gr-bars"><div class="gr-grid"><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc now"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div></div><div class="gbar bar-done" style="left:12%;width:16%;">Completo</div></div></div>
+      <div class="g-row"><div class="gr-label sub">Losa PB</div><div class="gr-bars"><div class="gr-grid"><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc now"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div></div><div class="gbar bar-act" style="left:24%;width:18%;">En curso</div></div></div>
+      <div class="g-row"><div class="gr-label sub">Losa PA y cubierta</div><div class="gr-bars"><div class="gr-grid"><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc now"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div></div><div class="gbar bar-fut" style="left:37%;width:15%;">Pendiente</div></div></div>
+      <div class="g-row grp"><div class="gr-label grp">Instalaciones</div><div class="gr-bars"><div class="gr-grid"><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc now"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div></div><div class="gbar bar-fut" style="left:37%;width:37%;">Jun — Sep</div></div></div>
+      <div class="g-row grp"><div class="gr-label grp">Terminaciones</div><div class="gr-bars"><div class="gr-grid"><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc now"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div></div><div class="gbar bar-fut" style="left:62%;width:36%;">Ago — Oct</div></div></div>
+      <div class="g-row"><div class="gr-label sub">Decisión: revestimiento</div><div class="gr-bars"><div class="gr-grid"><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc now"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div><div class="gr-gc"></div></div><div class="gbar bar-dec" style="left:44%;width:8%;">⚠ 16 may</div></div></div>
+    </div>
+    <div class="gantt-legend">
+      <div class="leg-item"><div style="width:12px;height:12px;background:#1d1d1f;"></div>Completado</div>
+      <div class="leg-item"><div style="width:12px;height:12px;background:#5856d6;"></div>En curso</div>
+      <div class="leg-item"><div style="width:12px;height:12px;background:#e8e8ed;"></div>Pendiente</div>
+      <div class="leg-item"><div style="width:12px;height:12px;background:#ff9500;"></div>Decisión cliente</div>
+      <div class="leg-item"><div style="width:2px;height:12px;background:#ff3b30;"></div>Hoy</div>
+    </div>
+  </div>
+
+  <!-- ── CASHFLOW ── -->
+  <div id="cashflow" class="section">
+    <div class="sec-h"><div class="sec-t">Cashflow · Mar–Oct 2025</div><button class="btn-main" onclick="openModal('modal-pago')">+ Registrar pago</button></div>
+    <div class="cf-metrics">
+      <div class="mc"><div class="mc-l">Presupuesto total</div><div class="mc-v">$78M</div><div class="mc-s">Contrato cerrado</div></div>
+      <div class="mc"><div class="mc-l">Ejecutado</div><div class="mc-v" style="color:#34c759;">$48.2M</div><div class="mc-s">62% del total</div></div>
+      <div class="mc"><div class="mc-l">Por ejecutar</div><div class="mc-v" style="color:#ff9500;">$29.8M</div><div class="mc-s">38% restante</div></div>
+      <div class="mc"><div class="mc-l">Próx. vencimiento</div><div class="mc-v" style="color:#ff3b30;">15 may</div><div class="mc-s">$980k · ElectroObra</div></div>
+    </div>
+    <div class="chart-area">
+      <div class="ct">Flujo mensual de egresos</div>
+      <div class="chart-bars">
+        <div class="chart-y"><div class="cy-l">$20M</div><div class="cy-l">$15M</div><div class="cy-l">$10M</div><div class="cy-l">$5M</div><div class="cy-l">$0</div></div>
+        <div class="bars-inner">
+          <div class="bar-g"><div class="bar-col exec" style="height:28%;"></div><div class="bar-lbl">Mar</div></div>
+          <div class="bar-g"><div class="bar-col exec" style="height:52%;"></div><div class="bar-lbl">Abr</div></div>
+          <div class="bar-g"><div class="bar-col cur" style="height:40%;"></div><div class="bar-lbl" style="color:#5856d6;font-weight:700;">May ◀</div></div>
+          <div class="bar-g"><div class="bar-col proj" style="height:55%;"></div><div class="bar-lbl">Jun</div></div>
+          <div class="bar-g"><div class="bar-col proj" style="height:75%;"></div><div class="bar-lbl">Jul</div></div>
+          <div class="bar-g"><div class="bar-col proj" style="height:80%;"></div><div class="bar-lbl">Ago</div></div>
+          <div class="bar-g"><div class="bar-col proj" style="height:65%;"></div><div class="bar-lbl">Sep</div></div>
+          <div class="bar-g"><div class="bar-col proj" style="height:30%;"></div><div class="bar-lbl">Oct</div></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:.75rem;">
+        <div class="leg-item"><div style="width:12px;height:12px;background:#1d1d1f;"></div>Ejecutado</div>
+        <div class="leg-item"><div style="width:12px;height:12px;background:#5856d6;"></div>Mes actual</div>
+        <div class="leg-item"><div style="width:12px;height:12px;background:#e8e8ed;"></div>Proyectado</div>
+      </div>
+    </div>
+    <div class="card" style="padding:0;">
+      <table class="tabla">
+        <thead><tr><th>Fecha</th><th>Concepto</th><th>Rubro</th><th style="text-align:right;">Monto</th><th>Estado</th></tr></thead>
+        <tbody id="pago-tabla">
+          <tr><td style="color:#6e6e73;">5 may</td><td>Cuota estructura — mayo</td><td style="color:#6e6e73;">Estructura</td><td style="text-align:right;" class="mp">$3.200.000</td><td><span class="tag t-done">Pagado</span></td></tr>
+          <tr><td style="color:#6e6e73;">28 abr</td><td>Carpintería metálica</td><td style="color:#6e6e73;">MO</td><td style="text-align:right;" class="mp">$1.850.000</td><td><span class="tag t-done">Pagado</span></td></tr>
+          <tr><td style="color:#6e6e73;">15 abr</td><td>Honorarios arquitecto — abril</td><td style="color:#6e6e73;">Honorarios</td><td style="text-align:right;" class="mp">$2.100.000</td><td><span class="tag t-done">Pagado</span></td></tr>
+          <tr class="hl"><td style="color:#ff3b30;font-weight:700;">15 may</td><td>Anticipo instalaciones</td><td style="color:#6e6e73;">Instalaciones</td><td style="text-align:right;" class="mn">$980.000</td><td><span class="tag t-urg">Vence pronto</span></td></tr>
+          <tr class="hl"><td style="color:#ff9500;font-weight:700;">31 may</td><td>Honorarios arquitecto — mayo</td><td style="color:#6e6e73;">Honorarios</td><td style="text-align:right;" class="mn">$2.100.000</td><td><span class="tag t-med">Pendiente</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── CONTRATACIONES ── -->
+  <div id="contrataciones" class="section">
+    <div class="sec-h"><div class="sec-t">Contrataciones</div><button class="btn-main" onclick="openModal('modal-contrato')">+ Agregar</button></div>
+    <div class="sec-h" style="margin-top:.25rem;"><div class="sec-t" style="font-size:10px;">Mano de obra</div></div>
+    <div class="cont-grid" id="cont-lista">
+      <div class="ccard"><div class="cc-top"><div class="cc-av">HP</div><span class="tag t-act">Activo</span></div><div class="cc-name">HormigonPalermo SA</div><div class="cc-role">Empresa de estructura</div><div class="cc-det"><i class="ti ti-mail"></i> obra@hormigonpalermo.com</div><div class="cc-foot"><span class="cc-amount">$18.400.000</span><span style="font-size:11px;color:#34c759;font-weight:600;">60% ejecutado</span></div></div>
+      <div class="ccard"><div class="cc-top"><div class="cc-av">MS</div><span class="tag t-act">Activo</span></div><div class="cc-name">MetalStruct SA</div><div class="cc-role">Carpintería metálica</div><div class="cc-det"><i class="ti ti-mail"></i> ventas@metalstruct.com</div><div class="cc-foot"><span class="cc-amount">$4.200.000</span><span style="font-size:11px;color:#ff9500;font-weight:600;">Entrega jun</span></div></div>
+      <div class="ccard"><div class="cc-top"><div class="cc-av">EO</div><span class="tag t-ini">Por firmar</span></div><div class="cc-name">ElectroObra</div><div class="cc-role">Instalaciones eléctricas</div><div class="cc-det"><i class="ti ti-alert-circle" style="color:#ff9500;"></i> Contrato pendiente</div><div class="cc-foot"><span class="cc-amount">$6.800.000</span><span style="font-size:11px;color:#ff9500;font-weight:600;">Inicia jun</span></div></div>
+      <div class="add-c" onclick="openModal('modal-contrato')"><i class="ti ti-plus" style="font-size:22px;color:#d2d2d7;"></i><span style="font-size:12px;color:#6e6e73;font-weight:600;">Agregar contratación</span></div>
+    </div>
+  </div>
+
+  <!-- ── GESTIONES ── -->
+  <div id="gestiones" class="section">
+    <div class="sec-h"><div class="sec-t">Gestiones municipales y servicios</div><button class="btn-main" onclick="openModal('modal-gestion')">+ Nueva gestión</button></div>
+    <div class="gest-cols">
+      <div>
+        <div class="card" style="padding:0;margin-bottom:1rem;">
+          <div style="padding:.85rem 1.25rem;border-bottom:0.5px solid #e8e8ed;"><div class="ct" style="margin:0;">Trámites municipales</div></div>
+          <div id="gest-lista">
+            <div class="tram-item"><div class="tram-ic" style="color:#34c759;"><i class="ti ti-file-certificate"></i></div><div class="tram-body"><div class="tram-name">Permiso de obra</div><div class="tram-det">Municipalidad BsAs · Exp. 45.231/25 · Vigencia mar 2025 — mar 2026</div><span class="tag t-done">Aprobado</span></div></div>
+            <div class="tram-item"><div class="tram-ic" style="color:#5856d6;"><i class="ti ti-map"></i></div><div class="tram-body"><div class="tram-name">Plano de demolición</div><div class="tram-det">DGFYCO · Plano N° 2025-8834 · 10 mar</div><span class="tag t-done">Aprobado</span></div></div>
+            <div class="tram-item"><div class="tram-ic" style="color:#ff9500;"><i class="ti ti-map-2"></i></div><div class="tram-body"><div class="tram-name">Plano de obra nueva</div><div class="tram-det">En proceso · DGFYCO · 1 corrección pendiente · Est. jun 2025</div><span class="tag t-act">En trámite</span></div></div>
+            <div class="tram-item"><div class="tram-ic" style="color:#6e6e73;"><i class="ti ti-certificate"></i></div><div class="tram-body"><div class="tram-name">Final de obra</div><div class="tram-det">Habilitación definitiva · Inicio estimado oct 2025</div><span class="tag t-pau">Pendiente</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="padding:0;margin-bottom:1rem;">
+          <div style="padding:.85rem 1.25rem;border-bottom:0.5px solid #e8e8ed;"><div class="ct" style="margin:0;">Servicios de obra</div></div>
+          <div class="serv-row"><div style="font-size:20px;color:#34c759;"><i class="ti ti-droplet"></i></div><div class="serv-body"><div class="serv-name">Agua — AySA</div><div class="serv-det">Conexión provisoria · Medidor 0034-5512</div></div><span class="tag t-done">Activo</span></div>
+          <div class="serv-row"><div style="font-size:20px;color:#ff9500;"><i class="ti ti-bolt"></i></div><div class="serv-body"><div class="serv-name">Electricidad — Edesur</div><div class="serv-det">Conexión provisoria · Contrato 2025-4421</div></div><span class="tag t-done">Activo</span></div>
+          <div class="serv-row"><div style="font-size:20px;color:#5856d6;"><i class="ti ti-flame"></i></div><div class="serv-body"><div class="serv-name">Gas — Metrogas</div><div class="serv-det">Trámite de conexión definitiva en curso</div></div><span class="tag t-act">En trámite</span></div>
+          <div class="serv-row"><div style="font-size:20px;color:#d2d2d7;"><i class="ti ti-wifi"></i></div><div class="serv-body"><div class="serv-name">Internet / Fibra</div><div class="serv-det">Solicitud no iniciada · Iniciar con terminaciones</div></div><span class="tag t-pau">Pendiente</span></div>
+        </div>
+        <div class="card" style="padding:0;">
+          <div style="padding:.85rem 1.25rem;border-bottom:0.5px solid #e8e8ed;"><div class="ct" style="margin:0;">Alertas próximas</div></div>
+          <div class="tram-item"><div class="tram-ic" style="color:#ff3b30;"><i class="ti ti-alert-triangle"></i></div><div class="tram-body"><div class="tram-name">Corrección plano de obra nueva</div><div class="tram-det">Responder observación DGFYCO sobre altura.</div><span class="tag t-urg">Vence 20 may</span></div></div>
+          <div class="tram-item"><div class="tram-ic" style="color:#ff9500;"><i class="ti ti-bell"></i></div><div class="tram-body"><div class="tram-name">Renovar permiso de obra</div><div class="tram-det">Iniciar trámite con 60 días de anticipación.</div><span class="tag t-med">Recordatorio · ene 2026</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PENDIENTES ── -->
+  <div id="pendientes" class="section">
+    <div class="sec-h"><div class="sec-t">Gestión de pendientes</div><button class="btn-main" onclick="openModal('modal-pendiente')">+ Agregar pendiente</button></div>
+    <div class="pend-list" id="pend-lista">
+      <div class="pend-row"><div class="check-box" onclick="toggleCheck(this)"></div><div style="flex:1;"><div class="pend-t">Pago anticipo instalaciones — $980.000</div><div class="pend-origen">Cashflow · Vence 15 may</div></div><span class="tag t-urg">Urgente</span></div>
+      <div class="pend-row"><div class="check-box" onclick="toggleCheck(this)"></div><div style="flex:1;"><div class="pend-t">Definir revestimiento de fachada</div><div class="pend-origen">Proyecto · Vence 16 may</div></div><span class="tag t-urg">Urgente</span></div>
+      <div class="pend-row"><div class="check-box" onclick="toggleCheck(this)"></div><div style="flex:1;"><div class="pend-t">Aprobar plano sanitario revisado</div><div class="pend-origen">Proyecto · Vence 23 may</div></div><span class="tag t-urg">Urgente</span></div>
+      <div class="pend-row"><div class="check-box" onclick="toggleCheck(this)"></div><div style="flex:1;"><div class="pend-t">Confirmar proveedor de carpintería</div><div class="pend-origen">Contrataciones · Vence 20 may</div></div><span class="tag t-med">Normal</span></div>
+      <div class="pend-row"><div class="check-box" onclick="toggleCheck(this)"></div><div style="flex:1;"><div class="pend-t">Honorarios arquitecto mayo — $2.100.000</div><div class="pend-origen">Cashflow · Vence 31 may</div></div><span class="tag t-med">Normal</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── NAVEGACIÓN ──
+  function nav(id, el) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('on'));
+    document.getElementById(id).classList.add('on');
+    document.querySelectorAll('.nl').forEach(n => n.classList.remove('on'));
+    el.classList.add('on');
+  }
+
+  // ── VISTA CLIENTE / ARQUITECTO ──
+  function setVista(v, btn) {
+    document.querySelectorAll('.vb').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    const esCliente = v === 'cli';
+    document.getElementById('cli-bar').style.display = esCliente ? 'flex' : 'none';
+    document.getElementById('arq-hero').style.display = esCliente ? 'none' : 'block';
+    document.getElementById('cli-hero').style.display = esCliente ? 'block' : 'none';
+    document.getElementById('cli-timeline').style.display = esCliente ? 'block' : 'none';
+    document.getElementById('add-pend-btn').style.display = esCliente ? 'none' : 'inline-flex';
+    document.getElementById('pblock-title').textContent = esCliente ? 'Necesitamos tu atención' : 'Pendientes del proyecto';
+    // En vista cliente, ocultar origen técnico y mostrar nota
+    document.querySelectorAll('#dash-pend-list .pi-o').forEach(o => {
+      o.style.display = esCliente ? 'none' : 'flex';
+    });
+  }
+
+  // ── MODALES ──
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  document.querySelectorAll('.overlay').forEach(o => {
+    o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+  });
+
+  // ── TOGGLE COLAPSABLE ──
+  function toggleR(id, btn) {
+    const el = document.getElementById(id);
+    const open = el.style.display !== 'none';
+    el.style.display = open ? 'none' : 'block';
+    btn.innerHTML = open
+      ? '<i class="ti ti-chevron-down"></i> Ver todos (5)'
+      : '<i class="ti ti-chevron-up"></i> Ocultar';
+  }
+
+  // ── ETAPAS PROYECTO ──
+  function showEtapa(id, btn) {
+    document.querySelectorAll('.etab-content').forEach(e => e.classList.remove('on'));
+    document.querySelectorAll('.etab').forEach(b => b.classList.remove('on'));
+    document.getElementById(id).classList.add('on');
+    btn.classList.add('on');
+  }
+
+  // ── AGREGAR PAGO ──
+  function agregarPago() {
+    const concepto = document.getElementById('pago-concepto').value.trim();
+    const monto = document.getElementById('pago-monto').value.trim();
+    const fecha = document.getElementById('pago-fecha').value;
+    const rubro = document.getElementById('pago-rubro').value;
+    const estado = document.getElementById('pago-estado').value;
+    if (!concepto || !monto) { alert('Completá concepto y monto.'); return; }
+    const montoFmt = '$' + Number(monto).toLocaleString('es-AR');
+    const fechaFmt = fecha ? new Date(fecha + 'T12:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }) : '-';
+    const tagClass = estado === 'pagado' ? 't-done' : estado === 'pendiente' ? 't-med' : 't-pau';
+    const tagLabel = estado === 'pagado' ? 'Pagado' : estado === 'pendiente' ? 'Pendiente' : 'Proyectado';
+    const colorClass = estado === 'pagado' ? 'mp' : estado === 'pendiente' ? 'mn' : 'mf';
+    const tr = document.createElement('tr');
+    tr.className = 'new-row';
+    tr.innerHTML = `<td style="color:#6e6e73;">${fechaFmt}</td><td>${concepto}</td><td style="color:#6e6e73;">${rubro}</td><td style="text-align:right;" class="${colorClass}">${montoFmt}</td><td><span class="tag ${tagClass}">${tagLabel}</span></td>`;
+    const tabla = document.getElementById('pago-tabla');
+    tabla.insertBefore(tr, tabla.firstChild);
+    closeModal('modal-pago');
+    ['pago-concepto','pago-monto','pago-fecha','pago-nota'].forEach(id => document.getElementById(id).value = '');
+  }
+
+  // ── AGREGAR CONTRATO ──
+  function agregarContrato() {
+    const nombre = document.getElementById('cont-nombre').value.trim();
+    const rol = document.getElementById('cont-rol').value.trim();
+    const email = document.getElementById('cont-email').value.trim();
+    const monto = document.getElementById('cont-monto').value.trim();
+    const estado = document.getElementById('cont-estado').value;
+    if (!nombre) { alert('Ingresá el nombre.'); return; }
+    const initials = nombre.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+    const tagClass = estado === 'activo' ? 't-act' : estado === 'porfirmar' ? 't-ini' : 't-done';
+    const tagLabel = estado === 'activo' ? 'Activo' : estado === 'porfirmar' ? 'Por firmar' : 'Finalizado';
+    const montoFmt = monto ? '$' + Number(monto).toLocaleString('es-AR') : '-';
+    const div = document.createElement('div');
+    div.className = 'ccard new-row';
+    div.innerHTML = `<div class="cc-top"><div class="cc-av">${initials}</div><span class="tag ${tagClass}">${tagLabel}</span></div><div class="cc-name">${nombre}</div><div class="cc-role">${rol || '—'}</div>${email ? `<div class="cc-det"><i class="ti ti-mail"></i> ${email}</div>` : ''}<div class="cc-foot"><span class="cc-amount">${montoFmt}</span></div>`;
+    const lista = document.getElementById('cont-lista');
+    lista.insertBefore(div, lista.lastElementChild);
+    closeModal('modal-contrato');
+    ['cont-nombre','cont-rol','cont-email','cont-tel','cont-monto'].forEach(id => document.getElementById(id).value = '');
+  }
+
+  // ── AGREGAR PENDIENTE ──
+  function agregarPendiente() {
+    const desc = document.getElementById('pend-desc').value.trim();
+    const tipo = document.getElementById('pend-tipo').value;
+    const urg = document.getElementById('pend-urg').value;
+    const fecha = document.getElementById('pend-fecha').value;
+    const origen = document.getElementById('pend-origen').value;
+    if (!desc) { alert('Ingresá una descripción.'); return; }
+    const fechaFmt = fecha ? new Date(fecha + 'T12:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }) : '-';
+    const tagClass = urg === 'urgente' ? 't-urg' : 't-med';
+    const tagLabel = urg === 'urgente' ? 'Urgente' : 'Normal';
+    const iconMap = { definicion: 'ti-palette', pago: 'ti-cash', documento: 'ti-file-text', reunion: 'ti-calendar' };
+    const icon = iconMap[tipo] || 'ti-circle';
+    // Agregar a sección pendientes
+    const row = document.createElement('div');
+    row.className = 'pend-row new-row';
+    row.innerHTML = `<div class="check-box" onclick="toggleCheck(this)"></div><div style="flex:1;"><div class="pend-t">${desc}</div><div class="pend-origen">${origen} · Vence ${fechaFmt}</div></div><span class="tag ${tagClass}">${tagLabel}</span>`;
+    document.getElementById('pend-lista').insertBefore(row, document.getElementById('pend-lista').firstChild);
+    // Agregar a dashboard
+    const pi = document.createElement('div');
+    pi.className = 'pi new-row';
+    pi.innerHTML = `<div class="pi-ic ic-d"><i class="ti ${icon}"></i></div><div class="pi-b"><div class="pi-t">${desc}</div><div class="pi-o">${origen}</div></div><div class="pi-r"><span class="vcu">${fechaFmt}</span><span class="tag ${tagClass}">${tagLabel}</span></div>`;
+    document.getElementById('dash-pend-list').insertBefore(pi, document.getElementById('dash-pend-list').firstChild);
+    const total = document.querySelectorAll('#dash-pend-list .pi').length;
+    document.getElementById('dash-count').textContent = total;
+    document.getElementById('dash-ub').textContent = total + ' urgentes';
+    closeModal('modal-pendiente');
+    ['pend-desc','pend-fecha','pend-nota'].forEach(id => document.getElementById(id).value = '');
+  }
+
+  // ── AGREGAR GESTIÓN ──
+  function agregarGestion() {
+    const nombre = document.getElementById('gest-nombre').value.trim();
+    const det = document.getElementById('gest-det').value.trim();
+    const estado = document.getElementById('gest-estado').value;
+    const fecha = document.getElementById('gest-fecha').value;
+    if (!nombre) { alert('Ingresá el nombre del trámite.'); return; }
+    const tagClass = estado === 'aprobado' ? 't-done' : estado === 'tramite' ? 't-act' : 't-pau';
+    const tagLabel = estado === 'aprobado' ? 'Aprobado' : estado === 'tramite' ? 'En trámite' : 'Pendiente';
+    const fechaFmt = fecha ? new Date(fecha + 'T12:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+    const div = document.createElement('div');
+    div.className = 'tram-item new-row';
+    div.innerHTML = `<div class="tram-ic" style="color:#5856d6;"><i class="ti ti-file-text"></i></div><div class="tram-body"><div class="tram-name">${nombre}</div><div class="tram-det">${det}${fechaFmt ? ' · Est. ' + fechaFmt : ''}</div><span class="tag ${tagClass}">${tagLabel}</span></div>`;
+    document.getElementById('gest-lista').appendChild(div);
+    closeModal('modal-gestion');
+    ['gest-nombre','gest-det','gest-fecha'].forEach(id => document.getElementById(id).value = '');
+  }
+
+  // ── TILDAR PENDIENTE ──
+  function toggleCheck(el) {
+    const row = el.parentElement;
+    const txt = row.querySelector('.pend-t');
+    const done = el.classList.toggle('done');
+    el.innerHTML = done ? '✓' : '';
+    txt.classList.toggle('done', done);
+  }
+</script>
+</body>
+</html>
